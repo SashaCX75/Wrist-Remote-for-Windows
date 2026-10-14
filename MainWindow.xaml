@@ -1,0 +1,214 @@
+﻿<Window x:Class="Wrist_Remote_for_Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Amazfit Mouse"
+        Loaded="Window_Loaded"
+        Width="350"
+        SizeToContent="Height"
+        MinWidth="350"
+        ResizeMode="CanMinimize"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource WindowForegroundBrush}" 
+        Icon="/logo.png">
+
+
+    <Window.Resources>
+        <Style x:Key="ThemeButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Background"
+                Value="{DynamicResource ButtonBackgroundBrush}"/>
+            <Setter Property="Foreground"
+                Value="{DynamicResource ButtonForegroundBrush}"/>
+            <Setter Property="BorderBrush"
+                Value="{DynamicResource ButtonBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="ButtonBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3"
+                            SnapsToDevicePixels="True">
+
+                            <ContentPresenter
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            RecognizesAccessKey="True"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <!-- Наведение курсора -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource ButtonHoverBrush}"/>
+                            </Trigger>
+
+                            <!-- Нажатие -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource ButtonPressedBrush}"/>
+                            </Trigger>
+
+                            <!-- Неактивная кнопка -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder"
+                                    Property="Background"
+                                    Value="{DynamicResource DisabledButtonBackgroundBrush}"/>
+                                <Setter TargetName="ButtonBorder"
+                                    Property="BorderBrush"
+                                    Value="{DynamicResource DisabledButtonBorderBrush}"/>
+                                <Setter Property="Foreground"
+                                    Value="{DynamicResource DisabledButtonForegroundBrush}"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                                <Setter Property="Opacity" Value="1"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок и кнопка темы -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                Grid.Column="0"
+                Text="Amazfit Mouse"
+                FontSize="24"
+                VerticalAlignment="Center"/>
+
+
+            <Button x:Name="ThemeButton"
+                Style="{StaticResource ThemeButtonStyle}"
+                Width="30"
+                Height="30"
+                Padding="0"
+                HorizontalAlignment="Right"
+                ToolTip="Switch theme"
+                Click="ThemeButton_Click">
+
+                <Grid Width="22" Height="22">
+
+                    <!-- Солнце -->
+                    <Viewbox x:Name="ThemeSunIcon"
+                         Visibility="Collapsed"
+                         Width="22"
+                         Height="22"
+                         Stretch="Uniform">
+                        <Canvas Width="100" Height="100">
+
+                            <!-- Лучи -->
+                            <Path Stroke="#F9A825"
+                                  StrokeThickness="7"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  Data="M 50,7 L 50,17
+                                        M 50,83 L 50,93
+                                        M 7,50 L 17,50
+                                        M 83,50 L 93,50
+                                        M 19.6,19.6 L 26.7,26.7
+                                        M 73.3,73.3 L 80.4,80.4
+                                        M 80.4,19.6 L 73.3,26.7
+                                        M 26.7,73.3 L 19.6,80.4"/>
+
+                            <!-- Центральный круг -->
+                            <Ellipse Canvas.Left="25"
+                                     Canvas.Top="25"
+                                     Width="50"
+                                     Height="50"
+                                     Fill="#FFCA28"
+                                     Stroke="#F9A825"
+                                     StrokeThickness="2"/>
+                        </Canvas>
+                    </Viewbox>
+
+
+                    <!-- Луна -->
+                    <Viewbox x:Name="ThemeMoonIcon"
+                         Visibility="Visible"
+                         Width="22"
+                         Height="22"
+                         Stretch="Uniform">
+                        <Canvas Width="100" Height="100">
+
+                            <Canvas.Resources>
+                                <LinearGradientBrush x:Key="MoonFill"
+                                        StartPoint="0,0"
+                                        EndPoint="1,1">
+                                    <GradientStop Color="#FFF176" Offset="0"/>
+                                    <GradientStop Color="#FFB300" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Canvas.Resources>
+
+                            <Path Data="M70,12
+                        A39,39 0 1,0 88,69
+                        A32,32 0 0,1 70,12 Z"
+                    Fill="{StaticResource MoonFill}"
+                    Stroke="#F9A825"
+                    StrokeThickness="2.5"
+                    StrokeLineJoin="Round"/>
+
+                        </Canvas>
+                    </Viewbox>
+
+
+                </Grid>
+            </Button>
+
+        </Grid>
+
+        <TextBlock
+            x:Name="StatusText"
+            Grid.Row="1"
+            Text="Stopped"
+            FontSize="16"
+            Margin="0,0,0,5"/>
+
+        <Button
+            x:Name="StartButton"
+            Style="{StaticResource ThemeButtonStyle}"
+            Grid.Row="2"
+            Content="Start Bluetooth Server"
+            FontSize="16"
+            Height="40"
+            IsEnabled="False"
+            Click="StartButton_Click"/>
+
+        <Button
+            x:Name="StopButton"
+            Style="{StaticResource ThemeButtonStyle}"
+            Grid.Row="3"
+            Content="Stop Bluetooth Server"
+            FontSize="16"
+            Height="40"
+            Margin="0,10,0,0"
+            IsEnabled="False"
+            Click="StopButton_Click"/>
+
+    </Grid>
+</Window>
