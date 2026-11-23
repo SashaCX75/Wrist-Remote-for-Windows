@@ -39,7 +39,10 @@ Data flow: **watch → `BluetoothMouseServer` → `InputCommand` → `MainWindow
 
 ### Adding a command
 
-A new command touches four places: the enum (and, for a new type, a class) in `InputCommand.cs`; the parser `switch` / `Read*Command` in `BluetoothMouseServer.cs`; the `Handle*Command` switch in `MainWindow.xaml.cs`; and the implementation in the matching `Windows*` helper. The watch app must also be updated to send it.
+- **New value in an existing type** (e.g. a new `ShortcutCommand`): add it to the enum in `InputCommand.cs`, add a `case` to the matching `Handle*Command` in `MainWindow.xaml.cs`, and implement the action in the matching `Windows*` helper if it doesn't exist yet. The parser needs no change: `Read*Command` just casts the byte to the enum (the Shortcut parser's `Enum.IsDefined` check picks up the new value automatically).
+- **New command type**: in addition, add a value to `InputCommandType` and an `InputCommand` subclass in `InputCommand.cs`; a `case` in the `switch (type)` plus a `Read*Command` parser in `BluetoothMouseServer.cs`; and a `case` in `Server_CommandReceived` plus a new `Handle*Command` method in `MainWindow.xaml.cs`.
+
+In both cases the watch app must also be updated to send the new bytes.
 
 ## UI, themes, settings
 
