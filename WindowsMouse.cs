@@ -164,4 +164,27 @@ public static class WindowsMouse
             new[] { input },
             Marshal.SizeOf<INPUT>());
     }
+
+    // Ctrl + колесо мыши — увеличение/уменьшение масштаба
+    public static void Zoom(int delta)
+    {
+        WindowsKeyboard.ControlDown();
+
+        try
+        {
+            Wheel(delta);
+        }
+        finally
+        {
+            WindowsKeyboard.ControlUp();
+        }
+    }
+
+    // Двойной клик левой кнопкой мыши
+    public static async Task DoubleClick()
+    {
+        await LeftClick(50);
+        await Task.Delay(80);
+        await LeftClick(50);
+    }
 }

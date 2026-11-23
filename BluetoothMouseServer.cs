@@ -48,11 +48,9 @@ public sealed class BluetoothMouseServer : IDisposable
         // Bluetooth adapter
         // ------------------------------------------------------------
 
-        var adapter =
-            await BluetoothAdapter.GetDefaultAsync();
+        var adapter = await BluetoothAdapter.GetDefaultAsync();
 
-        if (adapter is null)
-            return BluetoothCheckResult.AdapterNotFound;
+        if (adapter is null) return BluetoothCheckResult.AdapterNotFound;
 
 
         // ------------------------------------------------------------
@@ -61,11 +59,9 @@ public sealed class BluetoothMouseServer : IDisposable
 
         if (_bluetoothRadio == null)
         {
-            var radioFound =
-                await InitializeBluetoothRadioAsync();
+            var radioFound = await InitializeBluetoothRadioAsync();
 
-            if (!radioFound)
-                return BluetoothCheckResult.AdapterNotFound;
+            if (!radioFound) return BluetoothCheckResult.AdapterNotFound;
         }
 
 
@@ -73,8 +69,7 @@ public sealed class BluetoothMouseServer : IDisposable
         // Bluetooth enabled
         // ------------------------------------------------------------
 
-        if (_bluetoothRadio!.State !=
-            RadioState.On)
+        if (_bluetoothRadio!.State != RadioState.On)
         {
             return BluetoothCheckResult.BluetoothDisabled;
         }
@@ -106,14 +101,11 @@ public sealed class BluetoothMouseServer : IDisposable
 
     public async Task StartAsync()
     {
-        if (IsRunning)
-            return;
+        if (IsRunning) return;
 
-        var bluetoothResult =
-            await CheckBluetoothAsync();
+        var bluetoothResult = await CheckBluetoothAsync();
 
-        if (bluetoothResult !=
-            BluetoothCheckResult.Ok)
+        if (bluetoothResult != BluetoothCheckResult.Ok)
         {
             throw new InvalidOperationException(
                 BluetoothCheckResultHelper.GetMessage(
@@ -173,11 +165,9 @@ public sealed class BluetoothMouseServer : IDisposable
                 IsConnectable = true
             };
 
-        _serviceProvider.StartAdvertising(
-            advertisingParameters);
+        _serviceProvider.StartAdvertising(advertisingParameters);
 
-        Debug.WriteLine(
-            "BLE GATT server advertising started");
+        Debug.WriteLine("BLE GATT server advertising started");
 
         IsRunning = true;
 
@@ -188,18 +178,15 @@ public sealed class BluetoothMouseServer : IDisposable
 
     private async Task<bool> InitializeBluetoothRadioAsync()
     {
-        var radios =
-            await Radio.GetRadiosAsync();
+        var radios = await Radio.GetRadiosAsync();
 
         foreach (var radio in radios)
         {
-            if (radio.Kind != RadioKind.Bluetooth)
-                continue;
+            if (radio.Kind != RadioKind.Bluetooth) continue;
 
             _bluetoothRadio = radio;
 
-            _bluetoothRadio.StateChanged +=
-                BluetoothRadio_StateChanged;
+            _bluetoothRadio.StateChanged += BluetoothRadio_StateChanged;
 
             return true;
         }
@@ -229,13 +216,11 @@ public sealed class BluetoothMouseServer : IDisposable
         GattLocalCharacteristic sender,
         GattWriteRequestedEventArgs args)
     {
-        var deferral =
-            args.GetDeferral();
+        var deferral = args.GetDeferral();
 
         try
         {
-            Debug.WriteLine(
-                "BLE WRITE REQUEST RECEIVED");
+            Debug.WriteLine("BLE WRITE REQUEST RECEIVED");
 
             // ----------------------------------------------------
             // Получаем GATT session подключенного клиента
@@ -243,79 +228,50 @@ public sealed class BluetoothMouseServer : IDisposable
 
             SetSession(args.Session);
 
-            var request =
-                await args.GetRequestAsync();
+            var request = await args.GetRequestAsync();
 
             if (request == null)
             {
-                Debug.WriteLine(
-                    "BLE request is null");
-
+                Debug.WriteLine("BLE request is null");
                 return;
             }
 
-            var reader =
-                DataReader.FromBuffer(
-                    request.Value);
+            var reader = DataReader.FromBuffer(request.Value);
 
-            uint length =
-                reader.UnconsumedBufferLength;
+            uint length = reader.UnconsumedBufferLength;
 
             if (length < 1)
             {
-                Debug.WriteLine(
-                    "Invalid empty BLE packet");
-
+                Debug.WriteLine("Invalid empty BLE packet");
                 return;
             }
 
-            byte typeRaw =
-                reader.ReadByte();
-
-            var type =
-                (InputCommandType)typeRaw;
+            byte typeRaw = reader.ReadByte();
+            var type = (InputCommandType)typeRaw;
+            //Debug.WriteLine($"typeRaw: " + $"{typeRaw:X2}; type: " + $"{type}");
 
             InputCommand? command = null;
 
             switch (type)
             {
                 case InputCommandType.Mouse:
-
-                    command =
-                        ReadMouseCommand(
-                            reader,
-                            length);
-
+                    command = ReadMouseCommand(reader, length);
                     break;
-
 
                 case InputCommandType.Media:
-
-                    command =
-                        ReadMediaCommand(
-                            reader,
-                            length);
-
+                    command = ReadMediaCommand(reader, length);
                     break;
-
 
                 case InputCommandType.Presentation:
-
-                    command =
-                        ReadPresentationCommand(
-                            reader,
-                            length);
-
+                    command = ReadPresentationCommand(reader, length);
                     break;
 
-
                 case InputCommandType.System:
+                    command = ReadSystemCommand(reader, length);
+                    break;
 
-                    command =
-                        ReadSystemCommand(
-                            reader,
-                            length);
-
+                case InputCommandType.Shortcut:
+                    command = ReadShortcutCommand(reader, length);
                     break;
 
 
@@ -339,19 +295,16 @@ public sealed class BluetoothMouseServer : IDisposable
                     command);
             }
 
-            if (request.Option ==
-                GattWriteOption.WriteWithResponse)
+            if (request.Option == GattWriteOption.WriteWithResponse)
             {
                 request.Respond();
 
-                Debug.WriteLine(
-                    "BLE write response sent");
+                Debug.WriteLine("BLE write response sent");
             }
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(
-                $"BLE WRITE ERROR: {ex}");
+            Debug.WriteLine($"BLE WRITE ERROR: {ex}");
         }
         finally
         {
@@ -364,8 +317,7 @@ public sealed class BluetoothMouseServer : IDisposable
     // GATT session
     // ============================================================
 
-    private void SetSession(
-        GattSession session)
+    private void SetSession(GattSession session)
     {
         // Если это уже наша текущая сессия,
         // ничего делать не нужно.
@@ -472,6 +424,7 @@ public sealed class BluetoothMouseServer : IDisposable
            DataReader reader,
            uint totalLength)
     {
+        //Debug.WriteLine("MouseInputCommand");
         // Mouse packet:
         //
         // [Type][Buttons][Action][X][Y]
@@ -480,36 +433,26 @@ public sealed class BluetoothMouseServer : IDisposable
 
         if (totalLength < 7)
         {
-            Debug.WriteLine(
-                $"Invalid mouse packet length: {totalLength}");
-
+            Debug.WriteLine($"Invalid mouse packet length: {totalLength}");
             return null;
         }
 
 
-        byte buttonsRaw =
-            reader.ReadByte();
+        byte buttonsRaw = reader.ReadByte();
+        byte actionRaw = reader.ReadByte();
 
-        byte actionRaw =
-            reader.ReadByte();
+        reader.ByteOrder = ByteOrder.LittleEndian;
 
-
-        reader.ByteOrder =
-            ByteOrder.LittleEndian;
+        short data1 = reader.ReadInt16();
+        short data2 = reader.ReadInt16();
 
 
-        short data1 =
-            reader.ReadInt16();
+        var buttons = (MouseButtons)buttonsRaw;
 
-        short data2 =
-            reader.ReadInt16();
-
-
-        var buttons =
-            (MouseButtons)buttonsRaw;
-
-        var action =
-            (MouseAction)actionRaw;
+        var action = (MouseAction)actionRaw;
+        //Debug.WriteLine(
+        //    $"action: " + $"{actionRaw:X2}; " +
+        //    $"buttons: " + $"{buttonsRaw:X2}");
 
 
         short x = 0;
@@ -520,22 +463,15 @@ public sealed class BluetoothMouseServer : IDisposable
         switch (action)
         {
             case MouseAction.Move:
-
                 x = data1;
                 y = data2;
-
                 break;
-
 
             case MouseAction.Wheel:
-
                 wheel = data1;
-
                 break;
 
-
             default:
-
                 Debug.WriteLine(
                     $"Unknown mouse action: " +
                     $"{actionRaw:X2}");
@@ -562,23 +498,22 @@ public sealed class BluetoothMouseServer : IDisposable
             DataReader reader,
             uint totalLength)
     {
+        //Debug.WriteLine("MediaInputCommand");
         if (totalLength < 4)
+        {
+            Debug.WriteLine($"Invalid media packet length: {totalLength}");
             return null;
+        }
 
-        byte commandRaw =
-            reader.ReadByte();
+        byte commandRaw = reader.ReadByte();
+        byte valueRaw = reader.ReadByte();
+        byte flags = reader.ReadByte();
+        //Debug.WriteLine(
+        //    $"commandRaw: " + $"{commandRaw:X2}; " +
+        //    $"valueRaw: " + $"{valueRaw:X2}");
 
-        byte valueRaw =
-            reader.ReadByte();
-
-        byte flags =
-            reader.ReadByte();
-
-        var command =
-            (MediaCommand)commandRaw;
-
-        var value =
-            unchecked((sbyte)valueRaw);
+        var command = (MediaCommand)commandRaw;
+        var value = unchecked((sbyte)valueRaw);
 
         return new MediaInputCommand(
             command,
@@ -596,23 +531,22 @@ public sealed class BluetoothMouseServer : IDisposable
             DataReader reader,
             uint totalLength)
     {
+        //Debug.WriteLine("PresentationInputCommand");
         if (totalLength < 4)
+        {
+            Debug.WriteLine($"Invalid presentation packet length: {totalLength}");
             return null;
+        }
 
-        byte commandRaw =
-            reader.ReadByte();
+        byte commandRaw = reader.ReadByte();
+        byte valueRaw = reader.ReadByte();
+        byte flags = reader.ReadByte();
+        //Debug.WriteLine(
+        //    $"commandRaw: " + $"{commandRaw:X2}; " +
+        //    $"valueRaw: " + $"{valueRaw:X2}");
 
-        byte valueRaw =
-            reader.ReadByte();
-
-        byte flags =
-            reader.ReadByte();
-
-        var command =
-            (PresentationCommand)commandRaw;
-
-        var value =
-            unchecked((sbyte)valueRaw);
+        var command = (PresentationCommand)commandRaw;
+        var value = unchecked((sbyte)valueRaw);
 
         return new PresentationInputCommand(
             command,
@@ -630,23 +564,22 @@ public sealed class BluetoothMouseServer : IDisposable
             DataReader reader,
             uint totalLength)
     {
+        //Debug.WriteLine("SystemInputCommand");
         if (totalLength < 4)
+        {
+            Debug.WriteLine($"Invalid system packet length: {totalLength}");
             return null;
+        }
 
-        byte commandRaw =
-            reader.ReadByte();
+        byte commandRaw = reader.ReadByte();
+        byte valueRaw = reader.ReadByte();
+        byte flags = reader.ReadByte();
+        //Debug.WriteLine(
+        //    $"commandRaw: " + $"{commandRaw:X2}; " +
+        //    $"valueRaw: " + $"{valueRaw:X2}");
 
-        byte valueRaw =
-            reader.ReadByte();
-
-        byte flags =
-            reader.ReadByte();
-
-        var command =
-            (SystemCommand)commandRaw;
-
-        var value =
-            unchecked((sbyte)valueRaw);
+        var command = (SystemCommand)commandRaw;
+        var value = unchecked((sbyte)valueRaw);
 
         return new SystemInputCommand(
             command,
@@ -654,6 +587,42 @@ public sealed class BluetoothMouseServer : IDisposable
             flags);
     }
 
+    // ============================================================
+    // Shortcut
+    //
+    // [Type][Command][Value][Flags]
+    // Total = 4 bytes
+    // ============================================================
+    private static ShortcutInputCommand? 
+        ReadShortcutCommand(
+            DataReader reader,
+            uint totalLength)
+    {
+        //Debug.WriteLine("ShortcutInputCommand");
+        if (totalLength < 4)
+        {
+            Debug.WriteLine($"Invalid shortcut packet length: {totalLength}");
+            return null;
+        }
+
+        byte commandRaw = reader.ReadByte();
+        byte valueRaw = reader.ReadByte();
+        byte flags = reader.ReadByte();
+        //Debug.WriteLine(
+        //    $"commandRaw: " + $"{commandRaw:X2}; " +
+        //    $"valueRaw: " + $"{valueRaw:X2}");
+
+        var command = (ShortcutCommand)commandRaw;
+        var value = unchecked((sbyte)valueRaw);
+
+        if (!Enum.IsDefined(typeof(ShortcutCommand), command))
+        {
+            Debug.WriteLine($"Unknown shortcut command: {commandRaw:X2}");
+            return null;
+        }
+
+        return new ShortcutInputCommand(command, value, flags);
+    }
 
     // ============================================================
     // Stop

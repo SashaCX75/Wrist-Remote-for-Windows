@@ -7,7 +7,8 @@ public enum InputCommandType : byte
     Mouse = 0x01,
     Media = 0x02,
     Presentation = 0x03,
-    System = 0x04
+    System = 0x04,
+    Shortcut = 0x05
 }
 
 
@@ -97,6 +98,25 @@ public abstract class InputCommand
     {
         Type = type;
     }
+}
+
+
+//
+// Key Shortcut
+//
+public enum ShortcutCommand : byte
+{
+    ShowDesktop = 0x01,
+    HomeWeb = 0x02,
+    Back = 0x03,
+    Forward = 0x04,
+    Keyboard = 0x05,
+    ZoomIn = 0x06,
+    ZoomOut = 0x07,
+    DoubleClick = 0x08,
+    TaskView = 0x09,
+    LockPC = 0x0A,
+    Menu = 0x0B
 }
 
 
@@ -224,6 +244,33 @@ public sealed class SystemInputCommand : InputCommand
         sbyte value,
         byte flags)
         : base(InputCommandType.System)
+    {
+        Command = command;
+        Value = value;
+        Flags = flags;
+    }
+}
+
+//
+// Shortcut command
+//
+// Packet:
+// [Type][Command][Value][Flags]
+// Total: 4 bytes
+//
+public sealed class ShortcutInputCommand : InputCommand
+{
+    public ShortcutCommand Command { get; }
+
+    public sbyte Value { get; }
+
+    public byte Flags { get; }
+
+    public ShortcutInputCommand(
+        ShortcutCommand command,
+        sbyte value,
+        byte flags)
+        : base(InputCommandType.Shortcut)
     {
         Command = command;
         Value = value;

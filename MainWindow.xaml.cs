@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Threading.Tasks;
 
 namespace Wrist_Remote_for_Windows
 {
@@ -46,6 +47,7 @@ namespace Wrist_Remote_for_Windows
                 if (result != BluetoothCheckResult.Ok)
                 {
                     StatusText.Text = BluetoothCheckResultHelper.GetMessage(result);
+                    StatusText.Foreground = Brushes.Red;
 
                     StartButton.IsEnabled = false;
                     StopButton.IsEnabled = true;
@@ -54,12 +56,14 @@ namespace Wrist_Remote_for_Windows
                 }
 
                 StatusText.Text = "Bluetooth ready";
+                StatusText.Foreground = Brushes.Goldenrod;
                 StartButton.IsEnabled = true;
                 StopButton.IsEnabled = false;
             }
             catch (Exception ex)
             {
                 StatusText.Text = $"Bluetooth error: {ex.Message}";
+                StatusText.Foreground = Brushes.Red;
             }
         }
 
@@ -154,6 +158,7 @@ namespace Wrist_Remote_for_Windows
             Dispatcher.Invoke(() =>
             {
                 StatusText.Text = "Watch connected";
+                StatusText.Foreground = Brushes.LimeGreen;
             });
         }
 
@@ -182,8 +187,7 @@ namespace Wrist_Remote_for_Windows
                     WindowsMouse.MiddleUp();
                 }
 
-                _previousMouseButtons =
-                    MouseButtons.None;
+                _previousMouseButtons = MouseButtons.None;
 
                 StatusText.Text = "Watch disconnected";
             });
@@ -196,20 +200,17 @@ namespace Wrist_Remote_for_Windows
         {
             try
             {
-                Debug.WriteLine(
-                    "StartButton_Click");
+                Debug.WriteLine( "StartButton_Click");
 
-
-                StatusText.Text =
-                    "Starting BLE server...";
-
+                StatusText.Text = "Starting BLE server...";
+                StatusText.Foreground = Brushes.Goldenrod;
 
                 await _server.StartAsync();
             }
             catch (Exception ex)
             {
-                StatusText.Text =
-                    $"Error: {ex.Message}";
+                StatusText.Text = $"Error: {ex.Message}";
+                StatusText.Foreground = Brushes.Red;
             }
         }
 
@@ -218,10 +219,7 @@ namespace Wrist_Remote_for_Windows
             object sender,
             RoutedEventArgs e)
         {
-            Debug.WriteLine(
-                "StopButton_Click");
-
-
+            Debug.WriteLine( "StopButton_Click");
             _server.Stop();
         }
 
@@ -233,6 +231,7 @@ namespace Wrist_Remote_for_Windows
             Dispatcher.Invoke(() =>
             {
                 StatusText.Text = "BLE server running";
+                StatusText.Foreground = Brushes.LimeGreen;
                 StartButton.IsEnabled = false;
                 StopButton.IsEnabled = true;
             });
@@ -246,6 +245,7 @@ namespace Wrist_Remote_for_Windows
             Dispatcher.Invoke(() =>
             {
                 StatusText.Text = "BLE server stopped";
+                StatusText.Foreground = Brushes.Goldenrod;
                 StartButton.IsEnabled = true;
                 StopButton.IsEnabled = false;
             });
@@ -278,6 +278,10 @@ namespace Wrist_Remote_for_Windows
                     case SystemInputCommand system:
                         await HandleSystemCommand(system);
                         break;
+
+                    case ShortcutInputCommand shortcut:
+                        await HandleShortcutCommand(shortcut);
+                        break;
                 }
             });
         }
@@ -288,16 +292,14 @@ namespace Wrist_Remote_for_Windows
         {
             try
             {
-                var result =
-                    await _server.CheckBluetoothAsync();
+                var result = await _server.CheckBluetoothAsync();
 
                 Dispatcher.Invoke(() =>
                 {
                     if (result != BluetoothCheckResult.Ok)
                     {
-                        StatusText.Text =
-                            BluetoothCheckResultHelper.GetMessage(
-                                result);
+                        StatusText.Text = BluetoothCheckResultHelper.GetMessage(result);
+                        StatusText.Foreground = Brushes.Red;
 
                         StartButton.IsEnabled = false;
                         StopButton.IsEnabled = true;
@@ -306,6 +308,7 @@ namespace Wrist_Remote_for_Windows
                     }
 
                     StatusText.Text = "Bluetooth ready";
+                    StatusText.Foreground = Brushes.Goldenrod;
                     StartButton.IsEnabled = true;
                     StopButton.IsEnabled = false;
                 });
@@ -314,8 +317,8 @@ namespace Wrist_Remote_for_Windows
             {
                 Dispatcher.Invoke(() =>
                 {
-                    StatusText.Text =
-                        $"Bluetooth error: {ex.Message}";
+                    StatusText.Text = $"Bluetooth error: {ex.Message}";
+                    StatusText.Foreground = Brushes.Red;
                 });
             }
         }
@@ -564,6 +567,55 @@ namespace Wrist_Remote_for_Windows
             }
         }
 
+        private async Task HandleShortcutCommand(ShortcutInputCommand command)
+        {
+            switch (command.Command)
+            {
+                case ShortcutCommand.ShowDesktop:
+                    WindowsKeyboard.ShowDesktop();
+                    break;
+
+                case ShortcutCommand.HomeWeb:
+                    WindowsKeyboard.HomeWeb();
+                    break;
+
+                case ShortcutCommand.Back:
+                    WindowsKeyboard.Back();
+                    break;
+
+                case ShortcutCommand.Forward:
+                    WindowsKeyboard.Forward();
+                    break;
+
+                case ShortcutCommand.Keyboard:
+                    WindowsKeyboard.OpenVirtualKeyboard();
+                    break;
+
+                case ShortcutCommand.ZoomIn:
+                    WindowsMouse.Zoom(120);
+                    break;
+
+                case ShortcutCommand.ZoomOut:
+                    WindowsMouse.Zoom(-120);
+                    break;
+
+                case ShortcutCommand.DoubleClick:
+                    await WindowsMouse.DoubleClick();
+                    break;
+
+                case ShortcutCommand.TaskView:
+                    WindowsKeyboard.TaskView();
+                    break;
+
+                case ShortcutCommand.LockPC:
+                    WindowsKeyboard.LockWindows();
+                    break;
+
+                case ShortcutCommand.Menu:
+                    WindowsKeyboard.Menu();
+                    break;
+            }
+        }
 
         protected override void OnClosed(EventArgs e)
         {
